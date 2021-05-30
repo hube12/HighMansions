@@ -9,13 +9,15 @@ import kaptainwutax.mcutils.util.pos.CPos;
 import kaptainwutax.mcutils.util.pos.RPos;
 import kaptainwutax.mcutils.version.MCVersion;
 
+import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
 public class Main {
 	public static final MCVersion VERSION = MCVersion.v1_16_5;
 
 	public static void main(String[] args) {
-		LongStream.range(0, 1L << 48).parallel().forEach(Main::process);
+		LongStream.range(1L << 42, 1L << 48).parallel().forEach(Main::process);
 	}
 
 	public static void process(long structureSeed) {
@@ -27,16 +29,20 @@ public class Main {
 			for (int regZ = minBound.getZ() + 1; regZ < maxBound.getZ(); regZ++) {
 				CPos pos = mansion.getInRegion(structureSeed, regX, regZ, rand);
 				BPos bPos = pos.toBlockPos().add(9, 0, 9);
-				WorldSeed.getSisterSeeds(structureSeed).asStream().forEach(ws -> {
-							GenerationContext.Context context = mansion.getContext(ws);
-							if (mansion.canSpawn(pos, context.getBiomeSource())) {
-								int y = context.getGenerator().getHeightOnGround(bPos.getX(), bPos.getZ());
-								if (y > 90) {
-									System.out.printf("y=%d, Found %s at /tp @p %d ~ %d with y=%d%n", y, ws, bPos.getX(), bPos.getZ(), y);
-								}
-							}
+				List<GenerationContext.Context> list = WorldSeed.getSisterSeeds(structureSeed).asStream()
+						.mapToObj(mansion::getContext)
+						.filter(c -> mansion.canSpawn(pos, c.getBiomeSource()))
+						.collect(Collectors.toList());
+				if (!list.isEmpty()) {
+					GenerationContext.Context context = list.get(0);
+					int y = context.getGenerator().getHeightOnGround(bPos.getX(), bPos.getZ());
+					if (y > 90) {
+						System.out.printf("y=%d, Found %s at /tp @p %d ~ %d with y=%d%n", y, context.getWorldSeed(), bPos.getX(), bPos.getZ(), y);
+						for (GenerationContext.Context c : list) {
+							System.out.printf("Valid also :  Found %s at /tp @p %d ~ %d%n", context.getWorldSeed(), bPos.getX(), bPos.getZ());
 						}
-				);
+					}
+				}
 			}
 		}
 
