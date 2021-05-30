@@ -69,7 +69,7 @@ launch4j {
     maxHeapPercent = 80
     jarTask = project.tasks.shadowJar
     productName = "${project.name}"
-    fileDescription = "A fast enough nether ocean cracker"
+    fileDescription = "A fast enough high mansion cracker"
     copyConfigurable = [] // don't copy lib
     libraryDir= "ignore_libs"
     dontWrapJar=false
