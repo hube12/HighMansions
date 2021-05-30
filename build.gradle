@@ -1,0 +1,82 @@
+plugins {
+    id 'java'
+    id "application"
+    id "com.github.johnrengelman.shadow" version "7.0.0"
+    id 'edu.sc.seis.launch4j' version '2.5.0'
+}
+group 'com.seedfinding.neil'
+
+defaultTasks 'clean', 'release', 'run'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+repositories {
+    mavenCentral()
+    maven {url "https://jitpack.io"}
+}
+
+dependencies {
+    implementation('com.github.KaptainWutax:MathUtils:5531c4a87b0f1bb85d1dab2bdd18ce375400626a') { transitive = false }
+    implementation('com.github.KaptainWutax:SeedUtils:b6a383113ce5d8d09a59e91b28ff064fb97c0709') { transitive = false }
+    implementation('com.github.KaptainWutax:MCUtils:11e3c70867968877233630797741f6cd47777e41') { transitive = false }
+    implementation('com.github.KaptainWutax:NoiseUtils:288e1b60e0f427bead80f001d19565ad1adcbd73') { transitive = false }
+
+    implementation('com.github.KaptainWutax:BiomeUtils:bb071491950ebd8ff2ac9938acc1d105a8136b39') { transitive = false }
+    implementation('com.github.KaptainWutax:TerrainUtils:322c2405600be7e87ded65f7bc6f2c4f042a5472') { transitive = false }
+    implementation('com.github.KaptainWutax:FeatureUtils:58bde18c79d282ec3bbc955cb76dd5d4b9ad9136') { transitive = false }
+
+    testImplementation('org.junit.jupiter:junit-jupiter-api:5.4.2')
+    testRuntimeOnly('org.junit.jupiter:junit-jupiter-engine:5.4.2')
+}
+
+compileJava {
+    options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+}
+
+application {
+    mainClass.set("com.seedfinding.neil.Main")
+}
+
+test {
+    useJUnitPlatform {
+        includeEngines("junit-jupiter")
+        maxHeapSize = "1G"
+    }
+    testLogging {
+        events "passed", "skipped", "failed", "standardOut", "standardError"
+        outputs.upToDateWhen { false }
+        showStandardStreams = true
+        showExceptions true
+        showCauses true
+        showStackTraces true
+    }
+}
+
+
+shadowJar {
+    archiveFileName = "${project.name}-${project.version}.jar"
+}
+
+launch4j {
+    outfile = "${project.name}-${project.version}.exe"
+    outputDir = "libs"
+    supportUrl = "https://github.com/hube12"
+    jvmOptions = ["-Xms256M", "-Xmx8G"]
+    initialHeapPercent = 5
+    maxHeapPercent = 80
+    jarTask = project.tasks.shadowJar
+    productName = "${project.name}"
+    fileDescription = "A fast enough nether ocean cracker"
+    copyConfigurable = [] // don't copy lib
+    libraryDir= "ignore_libs"
+    dontWrapJar=false
+    headerType="console"
+}
+
+task("release"){
+    dependsOn(shadowJar)
+    dependsOn(createExe)
+}
