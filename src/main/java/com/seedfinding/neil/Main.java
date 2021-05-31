@@ -1,5 +1,7 @@
 package com.seedfinding.neil;
 
+import kaptainwutax.biomeutils.biome.Biome;
+import kaptainwutax.biomeutils.biome.Biomes;
 import kaptainwutax.biomeutils.source.OverworldBiomeSource;
 import kaptainwutax.featureutils.structure.Mansion;
 import kaptainwutax.mcutils.rand.ChunkRand;
@@ -16,7 +18,7 @@ public class Main {
 	public static final MCVersion VERSION = MCVersion.v1_16_5;
 
 	public static void main(String[] args) {
-		LongStream.range(1L << 42, 1L << 48).parallel().forEach(Main::process);
+		LongStream.range(1L<<32, 1L << 48).parallel().forEach(Main::process);
 	}
 
 	public static void process(long structureSeed) {
@@ -30,15 +32,16 @@ public class Main {
 				BPos bPos = cpos.toBlockPos().add(9, 0, 9);
 				for (int upper = 0; upper < 1 << 16L; upper++) {
 					long ws = StructureSeed.toWorldSeed(structureSeed, upper);
-					OverworldBiomeSource overworldBiomeSource = new OverworldBiomeSource(VERSION, ws);
-					if (mansion.canSpawn(cpos, overworldBiomeSource)) {
-						OverworldTerrainGenerator terrainGenerator = new OverworldTerrainGenerator(overworldBiomeSource);
+					OverworldBiomeSource source = new OverworldBiomeSource(VERSION, ws);
+					Biome biome=source.getBiomeForNoiseGen((cpos.getX() << 2) + 2, 0, (cpos.getZ() << 2) + 2);
+					if (biome== Biomes.DARK_FOREST_HILLS && mansion.canSpawn(cpos,source)){
+						OverworldTerrainGenerator terrainGenerator = new OverworldTerrainGenerator(source);
 						int y = terrainGenerator.getHeightOnGround(bPos.getX(), bPos.getZ());
-						if (y > 90) {
+						if (y > 100) {
 							System.out.printf("y=%d, Found %s at /tp @p %d ~ %d with y=%d%n", y, ws, bPos.getX(), bPos.getZ(), y);
-							System.out.println("SAVE %s" + structureSeed);
-							break;
+							System.out.println("SAVE " + structureSeed);
 						}
+						break;
 					}
 				}
 			}
